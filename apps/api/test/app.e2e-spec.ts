@@ -15,11 +15,17 @@ describe("AppController (e2e)", () => {
     await app.init();
   });
 
-  it("/ (GET)", () => {
+  it("/health (GET)", () => {
     return request(app.getHttpServer())
-      .get("/")
+      .get("/health")
       .expect(200)
-      .expect("Hello World!");
+      .expect((res) => {
+        expect(res.body.status).toBe("ok");
+        expect(res.body.service).toBe("smart-city-api");
+        expect(new Date(res.body.timestamp).toString()).not.toBe(
+          "Invalid Date"
+        );
+      });
   });
 
   afterEach(async () => {

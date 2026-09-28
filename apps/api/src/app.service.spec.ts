@@ -1,22 +1,20 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { AppController } from "./app.controller.js";
 import { AppService } from "./app.service.js";
 
-describe("AppController", () => {
-  let appController: AppController;
+describe("AppService", () => {
+  let appService: AppService;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
       providers: [AppService],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    appService = app.get<AppService>(AppService);
   });
 
   describe("getHealthCheck", () => {
     it("should return status ok with service name and timestamp", () => {
-      const result = appController.getHealthCheck();
+      const result = appService.getHealthCheck();
 
       expect(result.status).toBe("ok");
       expect(result.service).toBe("smart-city-api");
