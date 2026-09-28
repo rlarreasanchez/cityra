@@ -6,7 +6,7 @@ export class AppService {
     return {
       status: "ok",
       timestamp: new Date().toISOString(),
-      service: "smart-city-api",
+      service: "cityra-api",
     };
   }
 }

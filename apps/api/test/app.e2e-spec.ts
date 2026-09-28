@@ -21,7 +21,7 @@ describe("AppController (e2e)", () => {
       .expect(200)
       .expect((res) => {
         expect(res.body.status).toBe("ok");
-        expect(res.body.service).toBe("smart-city-api");
+        expect(res.body.service).toBe("cityra-api");
         expect(new Date(res.body.timestamp).toString()).not.toBe(
           "Invalid Date"
         );

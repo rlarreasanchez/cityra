@@ -19,7 +19,7 @@ describe("AppController", () => {
       const result = appController.getHealthCheck();
 
       expect(result.status).toBe("ok");
-      expect(result.service).toBe("smart-city-api");
+      expect(result.service).toBe("cityra-api");
       expect(new Date(result.timestamp).toString()).not.toBe("Invalid Date");
     });
   });
