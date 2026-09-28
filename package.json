@@ -1,0 +1,35 @@
+{
+	"name": "cityra",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"build": "turbo build",
+		"dev": "turbo dev",
+		"lint": "turbo lint",
+		"format": "prettier --write \"**/*.{ts,tsx,md}\""
+	},
+	"keywords": [
+		"smart-city",
+		"ict-assets",
+		"asset-management",
+		"geolocation",
+		"maintenance",
+		"gis",
+		"web-platform",
+		"monorepo"
+	],
+	"author": "Rafael Larrea Sánchez",
+	"license": "ISC",
+	"description": "Plataforma web para la gestión integral de activos TIC, su geolocalización, incidencias y mantenimiento en entornos Smart City",
+	"engines": {
+		"node": ">=18"
+	},
+	"packageManager": "npm@10.8.2",
+	"workspaces": [
+		"apps/api",
+		"apps/web"
+	],
+	"devDependencies": {
+		"turbo": "^2.11.5"
+	}
+}
