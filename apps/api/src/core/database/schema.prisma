@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "./../../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @db.VarChar(255)
+  role         UserRole
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdTickets  Ticket[] @relation("TicketCreatedBy")
+  assignedTickets Ticket[] @relation("TicketAssignedTo")
+
+  @@map("users")
+}
+
+model AssetType {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assets Asset[]
+
+  @@map("asset_types")
+}
+
+model Location {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(150)
+  address     String?  @db.VarChar(300)
+  latitude    Decimal  @db.Decimal(10, 7)
+  longitude   Decimal  @db.Decimal(10, 7)
+  description String?  @db.VarChar(500)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assets Asset[]
+
+  @@map("locations")
+}
+
+model Asset {
+  id               String      @id @default(uuid())
+  code             String      @unique @db.VarChar(50)
+  name             String      @db.VarChar(150)
+  description      String?     @db.VarChar(1000)
+  serialNumber     String?     @db.VarChar(100)
+  status           AssetStatus @default(ACTIVE)
+  typeId           String
+  locationId       String
+  installationDate DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  type     AssetType @relation(fields: [typeId], references: [id])
+  location Location  @relation(fields: [locationId], references: [id])
+  tickets  Ticket[]
+
+  @@index([typeId])
+  @@index([locationId])
+  @@index([status])
+  @@map("assets")
+}
+
+model Ticket {
+  id           String         @id @default(uuid())
+  code         String         @unique @db.VarChar(50)
+  type         TicketType
+  title        String         @db.VarChar(200)
+  description  String?        @db.VarChar(2000)
+  status       TicketStatus   @default(OPEN)
+  priority     TicketPriority @default(MEDIUM)
+
+  assetId      String
+  createdById  String
+  assignedToId String?
+
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  asset      Asset @relation(fields: [assetId], references: [id])
+  createdBy  User  @relation("TicketCreatedBy", fields: [createdById], references: [id])
+  assignedTo User? @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+
+  relationsFrom TicketRelation[] @relation("TicketRelationFrom")
+  relationsTo   TicketRelation[] @relation("TicketRelationTo")
+
+  @@index([assetId])
+  @@index([createdById])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@map("tickets")
+}
+
+model TicketRelation {
+  ticketId        String
+  relatedTicketId String
+  type            TicketRelationType
+
+  ticket        Ticket @relation("TicketRelationFrom", fields: [ticketId], references: [id], onDelete: Cascade)
+  relatedTicket Ticket @relation("TicketRelationTo", fields: [relatedTicketId], references: [id], onDelete: Cascade)
+
+  @@id([ticketId, relatedTicketId, type])
+  @@index([relatedTicketId])
+  @@map("ticket_relations")
+}
+
+enum UserRole {
+  ADMIN
+  TECHNICIAN
+  VIEWER
+}
+
+enum AssetStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  RETIRED
+}
+
+enum TicketType {
+  INCIDENT
+  MAINTENANCE
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketRelationType {
+  RELATED_TO
+  FOLLOW_UP
+  CAUSED_BY
+}

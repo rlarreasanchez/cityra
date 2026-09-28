@@ -3,9 +3,10 @@ import { AppController } from "./app.controller.js";
 import { AppService } from "./app.service.js";
 
 import { AppConfigModule } from "@config/app-config.module.js";
+import { DatabaseModule } from "./core/database/database.module.js";
 
 @Module({
-  imports: [AppConfigModule],
+  imports: [AppConfigModule, DatabaseModule],
   controllers: [AppController],
   providers: [AppService],
 })

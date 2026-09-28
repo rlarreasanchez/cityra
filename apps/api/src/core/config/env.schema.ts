@@ -44,6 +44,7 @@ export const envSchema = z.object({
         }
       )
   ),
+  DATABASE_URL: z.string().min(1),
 });
 
 export const readableConfigSchema = envSchema.transform((env) => ({
@@ -55,6 +56,7 @@ export const readableConfigSchema = envSchema.transform((env) => ({
   globalPrefix: env.APP_PREFIX,
   env: env.APP_ENV,
   allowedOrigins: env.ALLOWED_ORIGINS,
+  databaseUrl: env.DATABASE_URL,
 }));
 
 export type ReadableEnvVariables = z.infer<typeof readableConfigSchema>;
