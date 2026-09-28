@@ -30,7 +30,8 @@
   "packageManager": "npm@10.8.2",
   "workspaces": [
     "apps/api",
-    "apps/web"
+    "apps/web",
+    "packages/*"
   ],
   "devDependencies": {
     "prettier": "^3.9.9",
