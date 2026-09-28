@@ -12,6 +12,13 @@ async function bootstrap() {
   const globalPrefix = config.get("globalPrefix");
   app.setGlobalPrefix(globalPrefix);
 
+  // Enable CORS
+  app.enableCors({
+    origin: [...config.get("allowedOrigins")],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  });
+
   // Enable Versioning
   app.enableVersioning({
     defaultVersion: "1",

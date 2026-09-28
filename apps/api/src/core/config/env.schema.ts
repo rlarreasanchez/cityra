@@ -22,6 +22,28 @@ export const envSchema = z.object({
       .optional()
       .default("development")
   ),
+  ALLOWED_ORIGINS: cleanEmptyString(
+    z
+      .string()
+      .optional()
+      .default("http://localhost")
+      .transform((val) => val.split(",").map((item) => item.trim()))
+      .refine(
+        (origins) => {
+          // Prohibir wildcard (*) en producción (CWE-942: Permissive Cross-domain Policy)
+          const isProduction = process.env.APP_ENV === "production";
+          if (isProduction) {
+            return !origins.includes("*");
+          }
+          return true;
+        },
+        {
+          message:
+            'Configuración CORS insegura: ALLOWED_ORIGINS no puede ser "*" en producción. ' +
+            "Especifica dominios exactos (ej: https://miapp.com,https://app.midominio.com)",
+        }
+      )
+  ),
 });
 
 export const readableConfigSchema = envSchema.transform((env) => ({
@@ -32,6 +54,7 @@ export const readableConfigSchema = envSchema.transform((env) => ({
   host: env.APP_HOST,
   globalPrefix: env.APP_PREFIX,
   env: env.APP_ENV,
+  allowedOrigins: env.ALLOWED_ORIGINS,
 }));
 
 export type ReadableEnvVariables = z.infer<typeof readableConfigSchema>;
