@@ -1,22 +1,29 @@
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import request from "supertest";
+import { AppConfigService } from "../src/core/config/app-config.service.js";
+import { DatabaseService } from "../src/core/database/database.service.js";
 import { AppModule } from "./../src/app.module.js";
 
 describe("AppController (e2e)", () => {
-  let app: INestApplication;
+  let app: INestApplication | undefined;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(AppConfigService)
+      .useValue({ get: () => undefined })
+      .overrideProvider(DatabaseService)
+      .useValue({})
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
   });
 
   it("/health (GET)", () => {
-    return request(app.getHttpServer())
+    return request(app!.getHttpServer())
       .get("/health")
       .expect(200)
       .expect((res) => {
@@ -29,6 +36,7 @@ describe("AppController (e2e)", () => {
   });
 
   afterEach(async () => {
-    await app.close();
+    await app?.close();
+    app = undefined;
   });
 });

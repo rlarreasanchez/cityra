@@ -3,6 +3,12 @@ import { AppConfigService } from "./app-config.service.js";
 
 describe("AppConfigService", () => {
   const originalEnv = { ...process.env };
+  const testDatabaseUrl =
+    "postgresql://test:test@localhost:5432/cityra-test?schema=public";
+
+  beforeEach(() => {
+    process.env.DATABASE_URL = testDatabaseUrl;
+  });
 
   afterEach(() => {
     process.env = { ...originalEnv };
@@ -38,6 +44,7 @@ describe("AppConfigService", () => {
     expect(service.get("globalPrefix")).toBe("api");
     expect(service.get("env")).toBe("development");
     expect(service.get("allowedOrigins")).toEqual(["http://localhost"]);
+    expect(service.get("databaseUrl")).toBe(testDatabaseUrl);
   });
 
   it("should load custom values from env vars", async () => {
