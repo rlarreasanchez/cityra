@@ -22,5 +22,5 @@ export interface IUsersRepository {
   existsByEmail(email: string, exceptUserId?: string): Promise<boolean>;
   createUser(data: CreateUserData): Promise<User>;
   updateUser(id: string, data: UpdateUserData): Promise<User>;
-  deleteUser(id: string): Promise<void>;
+  deleteUser(id: string): Promise<boolean>;
 }

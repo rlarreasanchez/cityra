@@ -1,5 +1,6 @@
 import { PasswordService } from "@core/passwords/password.service.js";
 import { EmailAlreadyExistsError } from "../domain/errors/email-already-exists.error.js";
+import { UserNotFoundError } from "../domain/errors/user-not-found.error.js";
 import type { IUsersRepository } from "../domain/interfaces/users-repository.interface.js";
 import { UsersService } from "./users.service.js";
 
@@ -8,6 +9,7 @@ describe("UsersService", () => {
     existsByEmail: vi.fn().mockResolvedValue(false),
     createUser: vi.fn(),
     updateUser: vi.fn(),
+    deleteUser: vi.fn(),
   } as unknown as IUsersRepository;
   const passwordService = {
     hashPassword: vi.fn(),
@@ -110,5 +112,21 @@ describe("UsersService", () => {
     expect(usersRepository.updateUser).toHaveBeenCalledWith("current-user-id", {
       email: "current@example.com",
     });
+  });
+
+  it("deletes an existing user", async () => {
+    vi.mocked(usersRepository.deleteUser).mockResolvedValue(true);
+
+    await expect(service.deleteUser("user-id")).resolves.toBeUndefined();
+
+    expect(usersRepository.deleteUser).toHaveBeenCalledWith("user-id");
+  });
+
+  it("rejects deleting a user that does not exist", async () => {
+    vi.mocked(usersRepository.deleteUser).mockResolvedValue(false);
+
+    await expect(service.deleteUser("missing-user-id")).rejects.toBeInstanceOf(
+      UserNotFoundError
+    );
   });
 });

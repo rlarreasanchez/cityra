@@ -4,12 +4,13 @@ import { User } from "@cityra/domain";
 import { PasswordService } from "@core/passwords/password.service.js";
 
 import { USERS_REPOSITORY_TOKEN } from "../domain/config/tokens.js";
+import { EmailAlreadyExistsError } from "../domain/errors/email-already-exists.error.js";
+import { UserNotFoundError } from "../domain/errors/user-not-found.error.js";
 import {
   CreateUserData,
   type IUsersRepository,
   UpdateUserData,
 } from "../domain/interfaces/users-repository.interface.js";
-import { EmailAlreadyExistsError } from "../domain/errors/email-already-exists.error.js";
 
 type CreateUserInput = Omit<CreateUserData, "passwordHash"> & {
   password: string;
@@ -67,6 +68,10 @@ export class UsersService {
   }
 
   async deleteUser(id: string): Promise<void> {
-    await this.usersRepository.deleteUser(id);
+    const wasDeleted = await this.usersRepository.deleteUser(id);
+
+    if (!wasDeleted) {
+      throw new UserNotFoundError();
+    }
   }
 }

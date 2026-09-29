@@ -67,7 +67,9 @@ describe("UsersModule (e2e)", () => {
       return record.user;
     },
     deleteUser: async (id: string) => {
+      const previousLength = records.length;
       records = records.filter(({ user }) => user.id !== id);
+      return records.length < previousLength;
     },
   };
 
@@ -233,6 +235,17 @@ describe("UsersModule (e2e)", () => {
       .patch(`/api/v1/users/${user.body.id}`)
       .send({ email: "ada@example.com", name: "Ada Byron" })
       .expect(200);
+  });
+
+  it("returns not found when deleting a user that does not exist", async () => {
+    const response = await request(app.getHttpServer())
+      .delete(`/api/v1/users/${crypto.randomUUID()}`)
+      .expect(404);
+
+    expect(response.body).toMatchObject({
+      message: "El usuario no existe",
+      error: "USER_NOT_FOUND",
+    });
   });
 
   it("gets, updates and deletes a user through the HTTP endpoints", async () => {
