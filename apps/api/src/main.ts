@@ -5,8 +5,9 @@ import { useContainer } from "class-validator";
 import * as dotenv from "dotenv";
 
 import { AppConfigService } from "@config/app-config.service.js";
+import { validationPipe } from "@core/exceptions/pipes/validation.pipe.js";
+import { ResponseInterceptor } from "@core/responses/interceptors/response.interceptor.js";
 import { AppModule } from "./app.module.js";
-import { validationPipe } from "./core/exceptions/pipes/validation.pipe.js";
 
 dotenv.config();
 
@@ -20,6 +21,9 @@ async function bootstrap() {
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   });
+
+  // Global response interceptor
+  app.useGlobalInterceptors(new ResponseInterceptor(config));
 
   // pipes
   app.useGlobalPipes(validationPipe);
