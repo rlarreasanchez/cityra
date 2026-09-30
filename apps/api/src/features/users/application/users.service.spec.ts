@@ -6,6 +6,7 @@ import { UsersService } from "./users.service.js";
 
 describe("UsersService", () => {
   const usersRepository = {
+    getUserById: vi.fn(),
     existsByEmail: vi.fn().mockResolvedValue(false),
     createUser: vi.fn(),
     updateUser: vi.fn(),
@@ -18,6 +19,7 @@ describe("UsersService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(usersRepository.getUserById).mockResolvedValue({} as never);
     vi.mocked(usersRepository.existsByEmail).mockResolvedValue(false);
   });
 
@@ -82,6 +84,17 @@ describe("UsersService", () => {
     expect(usersRepository.updateUser).toHaveBeenCalledWith("user-id", {
       name: "Ada Lovelace",
     });
+  });
+
+  it("rejects updating a user that does not exist", async () => {
+    vi.mocked(usersRepository.getUserById).mockResolvedValue(null);
+
+    await expect(
+      service.updateUser("missing-user-id", { name: "Ada Lovelace" })
+    ).rejects.toBeInstanceOf(UserNotFoundError);
+
+    expect(usersRepository.existsByEmail).not.toHaveBeenCalled();
+    expect(usersRepository.updateUser).not.toHaveBeenCalled();
   });
 
   it("rejects updating to another user's email", async () => {

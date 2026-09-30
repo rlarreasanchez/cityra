@@ -50,6 +50,12 @@ export class UsersService {
   }
 
   async updateUser(id: string, data: UpdateUserInput): Promise<User> {
+    const existingUser = await this.usersRepository.getUserById(id);
+
+    if (!existingUser) {
+      throw new UserNotFoundError();
+    }
+
     if (
       data.email !== undefined &&
       (await this.usersRepository.existsByEmail(data.email, id))
