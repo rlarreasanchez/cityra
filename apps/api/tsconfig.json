@@ -4,7 +4,8 @@
     "ignoreDeprecations": "6.0",
     "paths": {
       "@config/*": ["src/core/config/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@features/*": ["src/features/*"]
     },
     "module": "nodenext",
     "moduleResolution": "nodenext",

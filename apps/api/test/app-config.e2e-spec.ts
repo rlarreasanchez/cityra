@@ -7,10 +7,17 @@ describe("AppConfigModule (e2e)", () => {
   const originalEnv = { ...process.env };
   const testDatabaseUrl =
     "postgresql://test:test@localhost:5432/cityra-test?schema=public";
+  const testCookieSecret = "test-cookie-secret-at-least-32-characters";
+  const testSessionSecret = "test-session-secret-at-least-32-characters";
   let app: INestApplication | undefined;
 
   beforeEach(async () => {
-    process.env = { ...originalEnv, DATABASE_URL: testDatabaseUrl };
+    process.env = {
+      ...originalEnv,
+      DATABASE_URL: testDatabaseUrl,
+      COOKIE_SECRET: testCookieSecret,
+      SESSION_SECRET: testSessionSecret,
+    };
     delete process.env.APP_NAME;
     delete process.env.APP_VERSION;
     delete process.env.APP_DESCRIPTION;
@@ -19,6 +26,11 @@ describe("AppConfigModule (e2e)", () => {
     delete process.env.APP_PREFIX;
     delete process.env.APP_ENV;
     delete process.env.ALLOWED_ORIGINS;
+    delete process.env.REDIS_HOST;
+    delete process.env.REDIS_PORT;
+    delete process.env.REDIS_PASSWORD;
+    delete process.env.SESSION_EXPIRES_IN_SECONDS;
+    delete process.env.SESSION_COOKIE_NAME;
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppConfigModule],
@@ -42,5 +54,12 @@ describe("AppConfigModule (e2e)", () => {
 
     expect(service).toBeInstanceOf(AppConfigService);
     expect(service.get("globalPrefix")).toBe("api");
+    expect(service.get("redisHost")).toBe("localhost");
+    expect(service.get("redisPort")).toBe(6379);
+    expect(service.get("databaseUrl")).toBe(testDatabaseUrl);
+    expect(service.get("cookieSecret")).toBe(testCookieSecret);
+    expect(service.get("sessionSecret")).toBe(testSessionSecret);
+    expect(service.get("sessionExpiration")).toBe(86400);
+    expect(service.get("sessionCookieName")).toBe("SESSION_ID");
   });
 });

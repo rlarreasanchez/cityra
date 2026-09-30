@@ -5,9 +5,13 @@ describe("AppConfigService", () => {
   const originalEnv = { ...process.env };
   const testDatabaseUrl =
     "postgresql://test:test@localhost:5432/cityra-test?schema=public";
+  const testCookieSecret = "test-cookie-secret-at-least-32-characters";
+  const testSessionSecret = "test-session-secret-at-least-32-characters";
 
   beforeEach(() => {
     process.env.DATABASE_URL = testDatabaseUrl;
+    process.env.COOKIE_SECRET = testCookieSecret;
+    process.env.SESSION_SECRET = testSessionSecret;
   });
 
   afterEach(() => {
@@ -31,6 +35,11 @@ describe("AppConfigService", () => {
     delete process.env.APP_PREFIX;
     delete process.env.APP_ENV;
     delete process.env.ALLOWED_ORIGINS;
+    delete process.env.REDIS_HOST;
+    delete process.env.REDIS_PORT;
+    delete process.env.REDIS_PASSWORD;
+    delete process.env.SESSION_EXPIRES_IN_SECONDS;
+    delete process.env.SESSION_COOKIE_NAME;
 
     const service = await createService();
 
@@ -44,13 +53,27 @@ describe("AppConfigService", () => {
     expect(service.get("globalPrefix")).toBe("api");
     expect(service.get("env")).toBe("development");
     expect(service.get("allowedOrigins")).toEqual(["http://localhost"]);
+    expect(service.get("redisHost")).toBe("localhost");
+    expect(service.get("redisPort")).toBe(6379);
+    expect(service.get("redisPassword")).toBeUndefined();
     expect(service.get("databaseUrl")).toBe(testDatabaseUrl);
+    expect(service.get("cookieSecret")).toBe(testCookieSecret);
+    expect(service.get("sessionSecret")).toBe(testSessionSecret);
+    expect(service.get("sessionExpiration")).toBe(86400);
+    expect(service.get("sessionCookieName")).toBe("SESSION_ID");
   });
 
   it("should load custom values from env vars", async () => {
     process.env.APP_NAME = "Cityra API";
     process.env.APP_PORT = "4000";
     process.env.ALLOWED_ORIGINS = "https://a.com, https://b.com";
+    process.env.REDIS_HOST = "redis.internal";
+    process.env.REDIS_PORT = "6380";
+    process.env.REDIS_PASSWORD = "redis-password";
+    process.env.COOKIE_SECRET = "custom-cookie-secret-at-least-32-chars";
+    process.env.SESSION_SECRET = "custom-session-secret-at-least-32-chars";
+    process.env.SESSION_EXPIRES_IN_SECONDS = "3600";
+    process.env.SESSION_COOKIE_NAME = "cityra-session";
 
     const service = await createService();
 
@@ -60,6 +83,17 @@ describe("AppConfigService", () => {
       "https://a.com",
       "https://b.com",
     ]);
+    expect(service.get("redisHost")).toBe("redis.internal");
+    expect(service.get("redisPort")).toBe(6380);
+    expect(service.get("redisPassword")).toBe("redis-password");
+    expect(service.get("cookieSecret")).toBe(
+      "custom-cookie-secret-at-least-32-chars"
+    );
+    expect(service.get("sessionSecret")).toBe(
+      "custom-session-secret-at-least-32-chars"
+    );
+    expect(service.get("sessionExpiration")).toBe(3600);
+    expect(service.get("sessionCookieName")).toBe("cityra-session");
   });
 
   it("should treat empty strings as unset and fall back to defaults", async () => {
@@ -75,6 +109,13 @@ describe("AppConfigService", () => {
   it("should throw when ALLOWED_ORIGINS is '*' in production", async () => {
     process.env.APP_ENV = "production";
     process.env.ALLOWED_ORIGINS = "*";
+
+    await expect(createService()).rejects.toThrow("Configuración inválida");
+  });
+
+  it("should throw when security secrets are missing or too short", async () => {
+    delete process.env.COOKIE_SECRET;
+    process.env.SESSION_SECRET = "short";
 
     await expect(createService()).rejects.toThrow("Configuración inválida");
   });

@@ -44,7 +44,20 @@ export const envSchema = z.object({
         }
       )
   ),
+  REDIS_HOST: z.string().default("localhost"),
+  REDIS_PORT: z
+    .string()
+    .default("6379")
+    .transform((val) => parseInt(val, 10)),
+  REDIS_PASSWORD: z.string().optional(),
   DATABASE_URL: z.string().min(1),
+  COOKIE_SECRET: z.string().min(32),
+  SESSION_SECRET: z.string().min(32),
+  SESSION_EXPIRES_IN_SECONDS: z
+    .string()
+    .default("86400")
+    .transform((val) => parseInt(val, 10)),
+  SESSION_COOKIE_NAME: z.string().default("SESSION_ID"),
 });
 
 export const readableConfigSchema = envSchema.transform((env) => ({
@@ -56,7 +69,14 @@ export const readableConfigSchema = envSchema.transform((env) => ({
   globalPrefix: env.APP_PREFIX,
   env: env.APP_ENV,
   allowedOrigins: env.ALLOWED_ORIGINS,
+  redisHost: env.REDIS_HOST,
+  redisPort: env.REDIS_PORT,
+  redisPassword: env.REDIS_PASSWORD,
   databaseUrl: env.DATABASE_URL,
+  cookieSecret: env.COOKIE_SECRET,
+  sessionSecret: env.SESSION_SECRET,
+  sessionExpiration: env.SESSION_EXPIRES_IN_SECONDS,
+  sessionCookieName: env.SESSION_COOKIE_NAME,
 }));
 
 export type ReadableEnvVariables = z.infer<typeof readableConfigSchema>;
