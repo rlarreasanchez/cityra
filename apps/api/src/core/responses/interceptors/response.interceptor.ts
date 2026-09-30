@@ -5,15 +5,21 @@ import {
   NestInterceptor,
 } from "@nestjs/common";
 
+import { ApiProperty } from "@nestjs/swagger";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { AppConfigService } from "@config/app-config.service.js";
-
 export class ResponseFormat<T> {
+  @ApiProperty({ example: true })
   isArray: boolean;
+
+  @ApiProperty({ example: "/api/hello" })
   path: string;
+
+  @ApiProperty({ example: "10ms" })
   duration: string;
+
+  @ApiProperty({ example: "GET" })
   method: string;
 
   data: T;
@@ -24,7 +30,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<
   T,
   ResponseFormat<T>
 > {
-  constructor(private readonly config: AppConfigService) {}
+  constructor() {}
 
   intercept(
     context: ExecutionContext,

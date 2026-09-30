@@ -1,4 +1,5 @@
 import { UserRole } from "@cityra/domain";
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsEmail,
   IsEnum,
@@ -24,6 +25,7 @@ class MatchesPasswordConstraint implements ValidatorConstraintInterface {
 }
 
 export class CreateUserDto {
+  @ApiProperty({ example: "John Doe" })
   @IsString({
     message: "El nombre es obligatorio",
   })
@@ -46,6 +48,7 @@ export class CreateUserDto {
   })
   email!: string;
 
+  @ApiProperty({ example: "password123" })
   @IsString({
     message: "La contraseña debe ser una cadena de texto",
   })
@@ -57,12 +60,14 @@ export class CreateUserDto {
   })
   password!: string;
 
+  @ApiProperty({ example: "password123" })
   @IsString({
     message: "La confirmación de contraseña debe ser una cadena de texto",
   })
   @Validate(MatchesPasswordConstraint)
   confirmPassword!: string;
 
+  @ApiProperty({ example: UserRole.TECHNICIAN })
   @IsEnum(UserRole, {
     message: "El rol no es válido",
   })

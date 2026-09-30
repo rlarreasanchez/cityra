@@ -1,4 +1,5 @@
 import { UserRole } from "@cityra/domain";
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsBoolean,
   IsEmail,
@@ -27,6 +28,7 @@ class MatchesPasswordConstraint implements ValidatorConstraintInterface {
 }
 
 export class UpdateUserDto {
+  @ApiProperty({ example: "John Doe", required: false })
   @IsOptional()
   @IsString({
     message: "El nombre debe ser una cadena de texto",
@@ -39,6 +41,7 @@ export class UpdateUserDto {
   })
   name?: string;
 
+  @ApiProperty({ example: "user@example.com", required: false })
   @IsOptional()
   @IsEmail(
     {},
@@ -51,6 +54,7 @@ export class UpdateUserDto {
   })
   email?: string;
 
+  @ApiProperty({ example: "password123", required: false })
   @IsOptional()
   @IsString({
     message: "La contraseña debe ser una cadena de texto",
@@ -63,6 +67,7 @@ export class UpdateUserDto {
   })
   password?: string;
 
+  @ApiProperty({ example: "password123", required: false })
   @ValidateIf((dto: UpdateUserDto) => dto.password != null)
   @IsString({
     message: "La confirmación de contraseña debe ser una cadena de texto",
@@ -70,12 +75,14 @@ export class UpdateUserDto {
   @Validate(MatchesPasswordConstraint)
   confirmPassword?: string;
 
+  @ApiProperty({ example: UserRole.TECHNICIAN, required: false })
   @IsOptional()
   @IsEnum(UserRole, {
     message: "El rol no es válido",
   })
   role?: UserRole;
 
+  @ApiProperty({ example: true, required: false })
   @IsOptional()
   @IsBoolean({
     message: "isActive debe ser un valor booleano",

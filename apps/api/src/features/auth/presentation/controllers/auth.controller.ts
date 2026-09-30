@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 
+import { ApiTags } from "@nestjs/swagger";
 import type { Request, Response } from "express";
 
 import { AppConfigService } from "@core/config/app-config.service.js";
@@ -20,6 +21,7 @@ import { LoginDto } from "../dtos/login.dto.js";
 import { AuthExceptionFilter } from "../filters/auth-exception.filter.js";
 
 @Controller("auth")
+@ApiTags("Auth")
 @UseGuards(SessionGuard)
 @UseFilters(AuthExceptionFilter)
 export class AuthController {

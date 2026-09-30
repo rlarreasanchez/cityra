@@ -1,6 +1,7 @@
 import { VersioningType } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { useContainer } from "class-validator";
 import cookieParser from "cookie-parser";
 import * as dotenv from "dotenv";
@@ -8,7 +9,10 @@ import session from "express-session";
 
 import { AppConfigService } from "@config/app-config.service.js";
 import { validationPipe } from "@core/exceptions/pipes/validation.pipe.js";
-import { ResponseInterceptor } from "@core/responses/interceptors/response.interceptor.js";
+import {
+  ResponseFormat,
+  ResponseInterceptor,
+} from "@core/responses/interceptors/response.interceptor.js";
 import { SessionService } from "@core/session/session.service.js";
 import { AppModule } from "./app.module.js";
 
@@ -37,7 +41,7 @@ async function bootstrap() {
   app.use(cookieParser(config.get("cookieSecret")));
 
   // Global response interceptor
-  app.useGlobalInterceptors(new ResponseInterceptor(config));
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   // pipes
   app.useGlobalPipes(validationPipe);
@@ -52,6 +56,21 @@ async function bootstrap() {
     defaultVersion: "1",
     type: VersioningType.URI,
   });
+
+  // Swagger Config
+  if (config.get("env") !== "production") {
+    const swaggerConfig = new DocumentBuilder()
+      .addBearerAuth()
+      .setTitle(`${config.get("appName")}`)
+      .setDescription(config.get("appDescription"))
+      .setVersion(config.get("appVersion"))
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig, {
+      extraModels: [ResponseFormat],
+      deepScanRoutes: true,
+    });
+    SwaggerModule.setup("api", app, document);
+  }
 
   // Start the app
   const port = config.get("port");
