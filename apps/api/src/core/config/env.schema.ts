@@ -1,5 +1,14 @@
 import { z, ZodPreprocess, ZodType } from "zod";
 
+export const allowedLogLevels = [
+  "error",
+  "warn",
+  "log",
+  "debug",
+  "verbose",
+  "all",
+];
+
 export const envSchema = z.object({
   APP_NAME: cleanEmptyString(
     z.string().optional().default("NestJS Application")
@@ -21,6 +30,20 @@ export const envSchema = z.object({
       .enum(["development", "production", "test"])
       .optional()
       .default("development")
+  ),
+  LOG_LEVEL: cleanEmptyString(
+    z
+      .string()
+      .optional()
+      .default("error")
+      .transform((val) => val.split(",").map((item) => item.trim()))
+      .refine(
+        (array) => array.every((item) => allowedLogLevels.includes(item)),
+        {
+          message:
+            'Invalid LOG_LEVEL. Must be one of "error", "warn", "log", "debug", "verbose", "all"',
+        }
+      )
   ),
   ALLOWED_ORIGINS: cleanEmptyString(
     z
@@ -70,6 +93,7 @@ export const readableConfigSchema = envSchema.transform((env) => ({
   host: env.APP_HOST,
   globalPrefix: env.APP_PREFIX,
   env: env.APP_ENV,
+  logLevel: env.LOG_LEVEL,
   allowedOrigins: env.ALLOWED_ORIGINS,
   redisHost: env.REDIS_HOST,
   redisPort: env.REDIS_PORT,

@@ -10,6 +10,8 @@ import session from "express-session";
 import { AppConfigService } from "@config/app-config.service.js";
 import { CsrfService } from "@core/csrf/csrf.service.js";
 import { validationPipe } from "@core/exceptions/pipes/validation.pipe.js";
+import { LoggerInterceptor } from "@core/logger/interceptors/logger.interceptor.js";
+import { LoggerService } from "@core/logger/logger.service.js";
 import {
   ResponseFormat,
   ResponseInterceptor,
@@ -44,7 +46,9 @@ async function bootstrap() {
   // CSRF Middleware
   app.use(app.get(CsrfService).getDoubleCsrfToken());
 
-  // Global response interceptor
+  // Filters and Interceptors
+  const logger = app.get(LoggerService);
+  app.useGlobalInterceptors(new LoggerInterceptor(logger));
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   // pipes
@@ -80,5 +84,9 @@ async function bootstrap() {
   const port = config.get("port");
   const host = config.get("host");
   await app.listen(port, host);
+  logger.log(
+    "SERVER_READY",
+    `Server ready at http://${host}:${port}/${globalPrefix}/v1`
+  );
 }
 await bootstrap();

@@ -37,6 +37,7 @@ describe("AppConfigService", () => {
     delete process.env.APP_HOST;
     delete process.env.APP_PREFIX;
     delete process.env.APP_ENV;
+    delete process.env.LOG_LEVEL;
     delete process.env.ALLOWED_ORIGINS;
     delete process.env.REDIS_HOST;
     delete process.env.REDIS_PORT;
@@ -56,6 +57,7 @@ describe("AppConfigService", () => {
     expect(service.get("host")).toBe("localhost");
     expect(service.get("globalPrefix")).toBe("api");
     expect(service.get("env")).toBe("development");
+    expect(service.get("logLevel")).toEqual(["error"]);
     expect(service.get("allowedOrigins")).toEqual(["http://localhost"]);
     expect(service.get("redisHost")).toBe("localhost");
     expect(service.get("redisPort")).toBe(6379);
@@ -72,6 +74,7 @@ describe("AppConfigService", () => {
   it("should load custom values from env vars", async () => {
     process.env.APP_NAME = "Cityra API";
     process.env.APP_PORT = "4000";
+    process.env.LOG_LEVEL = "warn, debug";
     process.env.ALLOWED_ORIGINS = "https://a.com, https://b.com";
     process.env.REDIS_HOST = "redis.internal";
     process.env.REDIS_PORT = "6380";
@@ -87,6 +90,7 @@ describe("AppConfigService", () => {
 
     expect(service.get("appName")).toBe("Cityra API");
     expect(service.get("port")).toBe(4000);
+    expect(service.get("logLevel")).toEqual(["warn", "debug"]);
     expect(service.get("allowedOrigins")).toEqual([
       "https://a.com",
       "https://b.com",
@@ -128,6 +132,20 @@ describe("AppConfigService", () => {
     process.env.SESSION_SECRET = "short";
     delete process.env.CSRF_SECRET;
     delete process.env.CSRF_COOKIE_NAME;
+
+    await expect(createService()).rejects.toThrow("Configuración inválida");
+  });
+
+  it("should parse LOG_LEVEL as a trimmed array of levels", async () => {
+    process.env.LOG_LEVEL = " error , warn ,log";
+
+    const service = await createService();
+
+    expect(service.get("logLevel")).toEqual(["error", "warn", "log"]);
+  });
+
+  it("should throw when LOG_LEVEL contains an invalid level", async () => {
+    process.env.LOG_LEVEL = "invalid-level";
 
     await expect(createService()).rejects.toThrow("Configuración inválida");
   });
