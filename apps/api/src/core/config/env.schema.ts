@@ -52,6 +52,8 @@ export const envSchema = z.object({
   REDIS_PASSWORD: z.string().optional(),
   DATABASE_URL: z.string().min(1),
   COOKIE_SECRET: z.string().min(32),
+  CSRF_SECRET: z.string().min(32),
+  CSRF_COOKIE_NAME: z.string().default("csrf-token"),
   SESSION_SECRET: z.string().min(32),
   SESSION_EXPIRES_IN_SECONDS: z
     .string()
@@ -74,6 +76,8 @@ export const readableConfigSchema = envSchema.transform((env) => ({
   redisPassword: env.REDIS_PASSWORD,
   databaseUrl: env.DATABASE_URL,
   cookieSecret: env.COOKIE_SECRET,
+  csrfSecret: env.CSRF_SECRET,
+  csrfCookieName: env.CSRF_COOKIE_NAME,
   sessionSecret: env.SESSION_SECRET,
   sessionExpiration: env.SESSION_EXPIRES_IN_SECONDS,
   sessionCookieName: env.SESSION_COOKIE_NAME,

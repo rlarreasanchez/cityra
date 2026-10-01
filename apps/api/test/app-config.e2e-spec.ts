@@ -9,6 +9,7 @@ describe("AppConfigModule (e2e)", () => {
     "postgresql://test:test@localhost:5432/cityra-test?schema=public";
   const testCookieSecret = "test-cookie-secret-at-least-32-characters";
   const testSessionSecret = "test-session-secret-at-least-32-characters";
+  const testCsrfSecret = "test-csrf-secret-at-least-32-characters";
   let app: INestApplication | undefined;
 
   beforeEach(async () => {
@@ -17,6 +18,8 @@ describe("AppConfigModule (e2e)", () => {
       DATABASE_URL: testDatabaseUrl,
       COOKIE_SECRET: testCookieSecret,
       SESSION_SECRET: testSessionSecret,
+      CSRF_SECRET: testCsrfSecret,
+      CSRF_COOKIE_NAME: "csrf-token",
     };
     delete process.env.APP_NAME;
     delete process.env.APP_VERSION;
@@ -61,5 +64,7 @@ describe("AppConfigModule (e2e)", () => {
     expect(service.get("sessionSecret")).toBe(testSessionSecret);
     expect(service.get("sessionExpiration")).toBe(86400);
     expect(service.get("sessionCookieName")).toBe("SESSION_ID");
+    expect(service.get("csrfSecret")).toBe(testCsrfSecret);
+    expect(service.get("csrfCookieName")).toBe("csrf-token");
   });
 });

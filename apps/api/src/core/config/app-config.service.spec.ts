@@ -7,11 +7,14 @@ describe("AppConfigService", () => {
     "postgresql://test:test@localhost:5432/cityra-test?schema=public";
   const testCookieSecret = "test-cookie-secret-at-least-32-characters";
   const testSessionSecret = "test-session-secret-at-least-32-characters";
+  const testCsrfSecret = "test-csrf-secret-at-least-32-characters";
 
   beforeEach(() => {
     process.env.DATABASE_URL = testDatabaseUrl;
     process.env.COOKIE_SECRET = testCookieSecret;
     process.env.SESSION_SECRET = testSessionSecret;
+    process.env.CSRF_SECRET = testCsrfSecret;
+    process.env.CSRF_COOKIE_NAME = "csrf-token";
   });
 
   afterEach(() => {
@@ -40,6 +43,7 @@ describe("AppConfigService", () => {
     delete process.env.REDIS_PASSWORD;
     delete process.env.SESSION_EXPIRES_IN_SECONDS;
     delete process.env.SESSION_COOKIE_NAME;
+    delete process.env.CSRF_COOKIE_NAME;
 
     const service = await createService();
 
@@ -61,6 +65,8 @@ describe("AppConfigService", () => {
     expect(service.get("sessionSecret")).toBe(testSessionSecret);
     expect(service.get("sessionExpiration")).toBe(86400);
     expect(service.get("sessionCookieName")).toBe("SESSION_ID");
+    expect(service.get("csrfSecret")).toBe(testCsrfSecret);
+    expect(service.get("csrfCookieName")).toBe("csrf-token");
   });
 
   it("should load custom values from env vars", async () => {
@@ -74,6 +80,8 @@ describe("AppConfigService", () => {
     process.env.SESSION_SECRET = "custom-session-secret-at-least-32-chars";
     process.env.SESSION_EXPIRES_IN_SECONDS = "3600";
     process.env.SESSION_COOKIE_NAME = "cityra-session";
+    process.env.CSRF_SECRET = testCsrfSecret;
+    process.env.CSRF_COOKIE_NAME = "csrf-token";
 
     const service = await createService();
 
@@ -94,6 +102,8 @@ describe("AppConfigService", () => {
     );
     expect(service.get("sessionExpiration")).toBe(3600);
     expect(service.get("sessionCookieName")).toBe("cityra-session");
+    expect(service.get("csrfSecret")).toBe(testCsrfSecret);
+    expect(service.get("csrfCookieName")).toBe("csrf-token");
   });
 
   it("should treat empty strings as unset and fall back to defaults", async () => {
@@ -116,6 +126,8 @@ describe("AppConfigService", () => {
   it("should throw when security secrets are missing or too short", async () => {
     delete process.env.COOKIE_SECRET;
     process.env.SESSION_SECRET = "short";
+    delete process.env.CSRF_SECRET;
+    delete process.env.CSRF_COOKIE_NAME;
 
     await expect(createService()).rejects.toThrow("Configuración inválida");
   });

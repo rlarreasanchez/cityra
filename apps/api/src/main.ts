@@ -8,6 +8,7 @@ import * as dotenv from "dotenv";
 import session from "express-session";
 
 import { AppConfigService } from "@config/app-config.service.js";
+import { CsrfService } from "@core/csrf/csrf.service.js";
 import { validationPipe } from "@core/exceptions/pipes/validation.pipe.js";
 import {
   ResponseFormat,
@@ -39,6 +40,9 @@ async function bootstrap() {
 
   // Cookies Middleware
   app.use(cookieParser(config.get("cookieSecret")));
+
+  // CSRF Middleware
+  app.use(app.get(CsrfService).getDoubleCsrfToken());
 
   // Global response interceptor
   app.useGlobalInterceptors(new ResponseInterceptor());
