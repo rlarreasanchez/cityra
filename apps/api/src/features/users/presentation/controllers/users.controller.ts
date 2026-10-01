@@ -6,7 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  UseFilters,
 } from "@nestjs/common";
 
 import { ApiTags } from "@nestjs/swagger";
@@ -14,11 +13,9 @@ import { ApiTags } from "@nestjs/swagger";
 import { UsersService } from "../../application/users.service.js";
 import { CreateUserDto } from "../dtos/create-user.dto.js";
 import { UpdateUserDto } from "../dtos/update-user.dto.js";
-import { UsersExceptionFilter } from "../filters/users-exception.filter.js";
 
 @Controller("users")
 @ApiTags("Users")
-@UseFilters(UsersExceptionFilter)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

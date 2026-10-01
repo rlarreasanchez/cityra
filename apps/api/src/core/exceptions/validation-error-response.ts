@@ -5,6 +5,7 @@ export function createValidationErrorResponse(
   validationErrors: Record<string, string[]>
 ) {
   return {
+    status: 400,
     message: VALIDATION_ERROR_MESSAGE,
     validationErrors,
     error: "VALIDATION_FAILED",

@@ -9,6 +9,10 @@ import session from "express-session";
 
 import { AppConfigService } from "@config/app-config.service.js";
 import { CsrfService } from "@core/csrf/csrf.service.js";
+import {
+  AllExceptionFilter,
+  ExceptionFormat,
+} from "@core/exceptions/filters/exceptions.filter.js";
 import { validationPipe } from "@core/exceptions/pipes/validation.pipe.js";
 import { LoggerInterceptor } from "@core/logger/interceptors/logger.interceptor.js";
 import { LoggerService } from "@core/logger/logger.service.js";
@@ -49,6 +53,7 @@ async function bootstrap() {
   // Filters and Interceptors
   const logger = app.get(LoggerService);
   app.useGlobalInterceptors(new LoggerInterceptor(logger));
+  app.useGlobalFilters(new AllExceptionFilter(logger, config));
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   // pipes
@@ -74,7 +79,7 @@ async function bootstrap() {
       .setVersion(config.get("appVersion"))
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig, {
-      extraModels: [ResponseFormat],
+      extraModels: [ResponseFormat, ExceptionFormat],
       deepScanRoutes: true,
     });
     SwaggerModule.setup("api", app, document);

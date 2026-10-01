@@ -5,7 +5,9 @@ import session from "express-session";
 import request from "supertest";
 import { AppConfigService } from "../src/core/config/app-config.service.js";
 import { DatabaseService } from "../src/core/database/database.service.js";
+import { AllExceptionFilter } from "../src/core/exceptions/filters/exceptions.filter.js";
 import { validationPipe } from "../src/core/exceptions/pipes/validation.pipe.js";
+import type { LoggerService } from "../src/core/logger/logger.service.js";
 import { PasswordService } from "../src/core/passwords/password.service.js";
 import { AuthModule } from "../src/features/auth/auth.module.js";
 import { AUTH_REPOSITORY_TOKEN } from "../src/features/auth/domain/config/tokens.js";
@@ -69,6 +71,16 @@ describe("AuthModule (e2e)", () => {
       type: VersioningType.URI,
       defaultVersion: "1",
     });
+    const loggerStub = {
+      error: vi.fn(),
+      warn: vi.fn(),
+      log: vi.fn(),
+      debug: vi.fn(),
+      verbose: vi.fn(),
+    } as unknown as LoggerService;
+    app.useGlobalFilters(
+      new AllExceptionFilter(loggerStub, app.get(AppConfigService))
+    );
     app.useGlobalPipes(validationPipe);
     await app.init();
     passwordService = app.get(PasswordService);
@@ -113,7 +125,7 @@ describe("AuthModule (e2e)", () => {
       .send({ email: "missing@example.com", password: "password123" })
       .expect(401);
 
-    expect(response.body.error).toBe("INVALID_CREDENTIALS");
+    expect(response.body.errorToken).toBe("INVALID_CREDENTIALS");
   });
 
   it("rejects login with an incorrect password", async () => {
@@ -122,7 +134,7 @@ describe("AuthModule (e2e)", () => {
       .send({ email: "ada@example.com", password: "wrong-password" })
       .expect(401);
 
-    expect(response.body.error).toBe("INVALID_CREDENTIALS");
+    expect(response.body.errorToken).toBe("INVALID_CREDENTIALS");
   });
 
   it("rejects login when the user is inactive", async () => {
@@ -133,7 +145,7 @@ describe("AuthModule (e2e)", () => {
       .send({ email: "ada@example.com", password: "password123" })
       .expect(403);
 
-    expect(response.body.error).toBe("USER_INACTIVE");
+    expect(response.body.errorToken).toBe("USER_INACTIVE");
   });
 
   it("returns the validation error format for an invalid email", async () => {

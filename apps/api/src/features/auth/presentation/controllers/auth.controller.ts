@@ -6,7 +6,6 @@ import {
   Post,
   Req,
   Res,
-  UseFilters,
   UseGuards,
 } from "@nestjs/common";
 
@@ -18,12 +17,10 @@ import { Public } from "@core/session/decorators/is-public.decorator.js";
 import { SessionGuard } from "@core/session/guards/session.guard.js";
 import { AuthService } from "@features/auth/application/auth.service.js";
 import { LoginDto } from "../dtos/login.dto.js";
-import { AuthExceptionFilter } from "../filters/auth-exception.filter.js";
 
 @Controller("auth")
 @ApiTags("Auth")
 @UseGuards(SessionGuard)
-@UseFilters(AuthExceptionFilter)
 export class AuthController {
   constructor(
     private readonly authService: AuthService,

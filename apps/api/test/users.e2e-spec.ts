@@ -4,7 +4,9 @@ import { Test, TestingModule } from "@nestjs/testing";
 import request from "supertest";
 import { AppConfigService } from "../src/core/config/app-config.service.js";
 import { DatabaseService } from "../src/core/database/database.service.js";
+import { AllExceptionFilter } from "../src/core/exceptions/filters/exceptions.filter.js";
 import { validationPipe } from "../src/core/exceptions/pipes/validation.pipe.js";
+import type { LoggerService } from "../src/core/logger/logger.service.js";
 import { PasswordService } from "../src/core/passwords/password.service.js";
 import { USERS_REPOSITORY_TOKEN } from "../src/features/users/domain/config/tokens.js";
 import {
@@ -91,6 +93,16 @@ describe("UsersModule (e2e)", () => {
       type: VersioningType.URI,
       defaultVersion: "1",
     });
+    const loggerStub = {
+      error: vi.fn(),
+      warn: vi.fn(),
+      log: vi.fn(),
+      debug: vi.fn(),
+      verbose: vi.fn(),
+    } as unknown as LoggerService;
+    app.useGlobalFilters(
+      new AllExceptionFilter(loggerStub, app.get(AppConfigService))
+    );
     app.useGlobalPipes(validationPipe);
     await app.init();
     passwordService = app.get(PasswordService);
@@ -170,7 +182,7 @@ describe("UsersModule (e2e)", () => {
 
     expect(duplicateEmailResponse.body).toMatchObject({
       message: invalidEmailResponse.body.message,
-      error: invalidEmailResponse.body.error,
+      errorToken: invalidEmailResponse.body.errorToken,
     });
     expect(Object.keys(duplicateEmailResponse.body.validationErrors)).toEqual(
       Object.keys(invalidEmailResponse.body.validationErrors)
@@ -213,7 +225,7 @@ describe("UsersModule (e2e)", () => {
     expect(response.body).toMatchObject({
       message: "Existen errores de validación. Por favor, revise los campos.",
       validationErrors: { email: ["El email ya está registrado"] },
-      error: "VALIDATION_FAILED",
+      errorToken: "VALIDATION_FAILED",
     });
     expect(firstUser.body.email).toBe("ada@example.com");
     expect(records[1].user.email).toBe("grace@example.com");
@@ -244,7 +256,7 @@ describe("UsersModule (e2e)", () => {
 
     expect(response.body).toMatchObject({
       message: "El usuario no existe",
-      error: "USER_NOT_FOUND",
+      errorToken: "USER_NOT_FOUND",
     });
   });
 
