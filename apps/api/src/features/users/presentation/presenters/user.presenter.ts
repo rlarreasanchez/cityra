@@ -23,7 +23,7 @@ export class UserPresenter {
   @ApiProperty({ example: "2026-10-01T12:00:00.000Z" })
   updatedAt: Date;
 
-  private constructor(user: User) {
+  constructor(user: User) {
     this.id = user.id;
     this.name = user.name;
     this.email = user.email;

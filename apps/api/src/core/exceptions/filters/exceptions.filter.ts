@@ -24,12 +24,13 @@ export class ExceptionFormat {
   path: string;
 
   @ApiProperty({
+    nullable: true,
     example: {
       email: ["email must be an email"],
       username: ["Username is required"],
     },
   })
-  validationErrors?: Record<string, string[]>;
+  validationErrors: Record<string, string[]> | null;
 
   @ApiProperty({
     example: "An internal server error occurred, please try again later",
@@ -180,7 +181,7 @@ export class AllExceptionFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      validationErrors: validationErrors ?? undefined,
+      validationErrors,
       message:
         status >= HttpStatus.INTERNAL_SERVER_ERROR && isProduction
           ? "An internal server error occurred, please try again later"

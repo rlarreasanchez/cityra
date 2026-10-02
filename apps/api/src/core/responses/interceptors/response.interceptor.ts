@@ -10,8 +10,9 @@ import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
 export class ResponseFormat<T> {
-  @ApiProperty({ example: true })
   isArray: boolean;
+
+  quantity: number;
 
   @ApiProperty({ example: "/api/hello" })
   path: string;

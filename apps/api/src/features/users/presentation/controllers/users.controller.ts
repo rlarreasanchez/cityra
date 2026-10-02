@@ -8,16 +8,18 @@ import {
   Post,
 } from "@nestjs/common";
 
+import { ApiTags } from "@nestjs/swagger";
+
 import {
-  ApiBadRequestResponse,
-  ApiCreatedResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiTags,
-} from "@nestjs/swagger";
-
-import { ExceptionFormat } from "@core/exceptions/filters/exceptions.filter.js";
-
+  ApiNotFoundErrorResponse,
+  ApiValidationErrorResponse,
+} from "@core/swagger/decorators/error-response.decorator.js";
+import {
+  ApiCreatedResponseType,
+  ApiDeletedResponseType,
+  ApiResponseType,
+  ApiUpdatedResponseType,
+} from "@core/swagger/decorators/response.decorator.js";
 import { UsersService } from "../../application/users.service.js";
 import { CreateUserDto } from "../dtos/create-user.dto.js";
 import { UpdateUserDto } from "../dtos/update-user.dto.js";
@@ -29,24 +31,28 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @ApiOkResponse({ type: UserPresenter, isArray: true })
+  @ApiResponseType(UserPresenter, true)
   async getUsers(): Promise<UserPresenter[]> {
     const users = await this.usersService.getUsers();
     return UserPresenter.fromDomainList(users);
   }
 
   @Get(":id")
-  @ApiOkResponse({ type: UserPresenter })
-  async getUserById(@Param("id") id: string): Promise<UserPresenter | null> {
+  @ApiResponseType(UserPresenter, false)
+  @ApiNotFoundErrorResponse({
+    description: "El usuario no existe",
+    errorToken: "USER_NOT_FOUND",
+  })
+  async getUserById(@Param("id") id: string): Promise<UserPresenter> {
     const user = await this.usersService.getUserById(id);
-    return user ? UserPresenter.fromDomain(user) : null;
+    return UserPresenter.fromDomain(user);
   }
 
   @Post()
-  @ApiCreatedResponse({ type: UserPresenter })
-  @ApiBadRequestResponse({
+  @ApiCreatedResponseType(UserPresenter, false)
+  @ApiValidationErrorResponse({
     description: "Errores de validación o email ya registrado",
-    type: ExceptionFormat,
+    validationErrors: { email: ["El email ya está registrado"] },
   })
   async createUser(@Body() dto: CreateUserDto): Promise<UserPresenter> {
     const user = await this.usersService.createUser({
@@ -59,14 +65,14 @@ export class UsersController {
   }
 
   @Patch(":id")
-  @ApiOkResponse({ type: UserPresenter })
-  @ApiBadRequestResponse({
+  @ApiUpdatedResponseType(UserPresenter, false)
+  @ApiValidationErrorResponse({
     description: "Errores de validación o email ya registrado",
-    type: ExceptionFormat,
+    validationErrors: { email: ["El email ya está registrado"] },
   })
-  @ApiNotFoundResponse({
+  @ApiNotFoundErrorResponse({
     description: "El usuario no existe",
-    type: ExceptionFormat,
+    errorToken: "USER_NOT_FOUND",
   })
   async updateUser(
     @Param("id") id: string,
@@ -83,10 +89,10 @@ export class UsersController {
   }
 
   @Delete(":id")
-  @ApiOkResponse({ description: "El usuario fue eliminado correctamente" })
-  @ApiNotFoundResponse({
+  @ApiDeletedResponseType("El usuario fue eliminado correctamente")
+  @ApiNotFoundErrorResponse({
     description: "El usuario no existe",
-    type: ExceptionFormat,
+    errorToken: "USER_NOT_FOUND",
   })
   async deleteUser(@Param("id") id: string): Promise<void> {
     await this.usersService.deleteUser(id);

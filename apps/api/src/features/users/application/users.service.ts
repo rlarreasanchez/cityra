@@ -32,8 +32,14 @@ export class UsersService {
     return this.usersRepository.getUsers();
   }
 
-  async getUserById(id: string): Promise<User | null> {
-    return this.usersRepository.getUserById(id);
+  async getUserById(id: string): Promise<User> {
+    const user = await this.usersRepository.getUserById(id);
+
+    if (!user) {
+      throw new UserNotFoundError();
+    }
+
+    return user;
   }
 
   async createUser(data: CreateUserInput): Promise<User> {

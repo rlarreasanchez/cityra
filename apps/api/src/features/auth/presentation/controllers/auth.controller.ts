@@ -9,19 +9,17 @@ import {
   UseGuards,
 } from "@nestjs/common";
 
-import {
-  ApiForbiddenResponse,
-  ApiNoContentResponse,
-  ApiOkResponse,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from "@nestjs/swagger";
+import { ApiNoContentResponse, ApiTags } from "@nestjs/swagger";
 import type { Request, Response } from "express";
 
 import { AppConfigService } from "@core/config/app-config.service.js";
-import { ExceptionFormat } from "@core/exceptions/filters/exceptions.filter.js";
 import { Public } from "@core/session/decorators/is-public.decorator.js";
 import { SessionGuard } from "@core/session/guards/session.guard.js";
+import {
+  ApiForbiddenErrorResponse,
+  ApiUnauthorizedErrorResponse,
+} from "@core/swagger/decorators/error-response.decorator.js";
+import { ApiResponseType } from "@core/swagger/decorators/response.decorator.js";
 import { AuthService } from "@features/auth/application/auth.service.js";
 import { LoginDto } from "../dtos/login.dto.js";
 import { AuthenticatedUserPresenter } from "../presenters/authenticated-user.presenter.js";
@@ -38,14 +36,14 @@ export class AuthController {
   @Post("login")
   @HttpCode(200)
   @Public()
-  @ApiOkResponse({ type: AuthenticatedUserPresenter })
-  @ApiUnauthorizedResponse({
+  @ApiResponseType(AuthenticatedUserPresenter, false)
+  @ApiUnauthorizedErrorResponse({
     description: "El email o la contraseña son incorrectos",
-    type: ExceptionFormat,
+    errorToken: "INVALID_CREDENTIALS",
   })
-  @ApiForbiddenResponse({
+  @ApiForbiddenErrorResponse({
     description: "El usuario no está activo",
-    type: ExceptionFormat,
+    errorToken: "USER_INACTIVE",
   })
   async login(
     @Body() loginDto: LoginDto,
@@ -71,9 +69,9 @@ export class AuthController {
   @Post("logout")
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Sesión cerrada correctamente" })
-  @ApiUnauthorizedResponse({
+  @ApiUnauthorizedErrorResponse({
     description: "No hay una sesión activa",
-    type: ExceptionFormat,
+    errorToken: "SESSION_INVALID",
   })
   async logout(@Req() req: Request, @Res() res: Response) {
     await new Promise<void>((resolve, reject) => {
@@ -86,10 +84,10 @@ export class AuthController {
 
   @Get("me")
   @HttpCode(200)
-  @ApiOkResponse({ type: AuthenticatedUserPresenter })
-  @ApiUnauthorizedResponse({
+  @ApiResponseType(AuthenticatedUserPresenter, false)
+  @ApiUnauthorizedErrorResponse({
     description: "No hay una sesión activa o el usuario ya no existe",
-    type: ExceptionFormat,
+    errorToken: "SESSION_INVALID",
   })
   async me(@Req() req: Request): Promise<AuthenticatedUserPresenter> {
     const user = await this.authService.getCurrentUser(req.session.userId!);
