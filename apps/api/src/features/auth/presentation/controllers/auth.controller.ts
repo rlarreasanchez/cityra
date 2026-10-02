@@ -9,14 +9,22 @@ import {
   UseGuards,
 } from "@nestjs/common";
 
-import { ApiTags } from "@nestjs/swagger";
+import {
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from "@nestjs/swagger";
 import type { Request, Response } from "express";
 
 import { AppConfigService } from "@core/config/app-config.service.js";
+import { ExceptionFormat } from "@core/exceptions/filters/exceptions.filter.js";
 import { Public } from "@core/session/decorators/is-public.decorator.js";
 import { SessionGuard } from "@core/session/guards/session.guard.js";
 import { AuthService } from "@features/auth/application/auth.service.js";
 import { LoginDto } from "../dtos/login.dto.js";
+import { AuthenticatedUserPresenter } from "../presenters/authenticated-user.presenter.js";
 
 @Controller("auth")
 @ApiTags("Auth")
@@ -30,7 +38,19 @@ export class AuthController {
   @Post("login")
   @HttpCode(200)
   @Public()
-  async login(@Body() loginDto: LoginDto, @Req() req: Request) {
+  @ApiOkResponse({ type: AuthenticatedUserPresenter })
+  @ApiUnauthorizedResponse({
+    description: "El email o la contraseña son incorrectos",
+    type: ExceptionFormat,
+  })
+  @ApiForbiddenResponse({
+    description: "El usuario no está activo",
+    type: ExceptionFormat,
+  })
+  async login(
+    @Body() loginDto: LoginDto,
+    @Req() req: Request
+  ): Promise<AuthenticatedUserPresenter> {
     const { email, password } = loginDto;
     const user = await this.authService.validateCredentials(email, password);
 
@@ -45,11 +65,16 @@ export class AuthController {
       req.session.save((error) => (error ? reject(error) : resolve()));
     });
 
-    return user;
+    return AuthenticatedUserPresenter.fromDomain(user);
   }
 
   @Post("logout")
   @HttpCode(204)
+  @ApiNoContentResponse({ description: "Sesión cerrada correctamente" })
+  @ApiUnauthorizedResponse({
+    description: "No hay una sesión activa",
+    type: ExceptionFormat,
+  })
   async logout(@Req() req: Request, @Res() res: Response) {
     await new Promise<void>((resolve, reject) => {
       req.session.destroy((error) => (error ? reject(error) : resolve()));
@@ -61,7 +86,13 @@ export class AuthController {
 
   @Get("me")
   @HttpCode(200)
-  async me(@Req() req: Request) {
-    return this.authService.getCurrentUser(req.session.userId!);
+  @ApiOkResponse({ type: AuthenticatedUserPresenter })
+  @ApiUnauthorizedResponse({
+    description: "No hay una sesión activa o el usuario ya no existe",
+    type: ExceptionFormat,
+  })
+  async me(@Req() req: Request): Promise<AuthenticatedUserPresenter> {
+    const user = await this.authService.getCurrentUser(req.session.userId!);
+    return AuthenticatedUserPresenter.fromDomain(user);
   }
 }

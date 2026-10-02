@@ -8,11 +8,20 @@ import {
   Post,
 } from "@nestjs/common";
 
-import { ApiTags } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags,
+} from "@nestjs/swagger";
+
+import { ExceptionFormat } from "@core/exceptions/filters/exceptions.filter.js";
 
 import { UsersService } from "../../application/users.service.js";
 import { CreateUserDto } from "../dtos/create-user.dto.js";
 import { UpdateUserDto } from "../dtos/update-user.dto.js";
+import { UserPresenter } from "../presenters/user.presenter.js";
 
 @Controller("users")
 @ApiTags("Users")
@@ -20,38 +29,66 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  getUsers() {
-    return this.usersService.getUsers();
+  @ApiOkResponse({ type: UserPresenter, isArray: true })
+  async getUsers(): Promise<UserPresenter[]> {
+    const users = await this.usersService.getUsers();
+    return UserPresenter.fromDomainList(users);
   }
 
   @Get(":id")
-  getUserById(@Param("id") id: string) {
-    return this.usersService.getUserById(id);
+  @ApiOkResponse({ type: UserPresenter })
+  async getUserById(@Param("id") id: string): Promise<UserPresenter | null> {
+    const user = await this.usersService.getUserById(id);
+    return user ? UserPresenter.fromDomain(user) : null;
   }
 
   @Post()
-  createUser(@Body() dto: CreateUserDto) {
-    return this.usersService.createUser({
+  @ApiCreatedResponse({ type: UserPresenter })
+  @ApiBadRequestResponse({
+    description: "Errores de validación o email ya registrado",
+    type: ExceptionFormat,
+  })
+  async createUser(@Body() dto: CreateUserDto): Promise<UserPresenter> {
+    const user = await this.usersService.createUser({
       name: dto.name,
       email: dto.email,
       password: dto.password,
       role: dto.role,
     });
+    return UserPresenter.fromDomain(user);
   }
 
   @Patch(":id")
-  updateUser(@Param("id") id: string, @Body() dto: UpdateUserDto) {
-    return this.usersService.updateUser(id, {
+  @ApiOkResponse({ type: UserPresenter })
+  @ApiBadRequestResponse({
+    description: "Errores de validación o email ya registrado",
+    type: ExceptionFormat,
+  })
+  @ApiNotFoundResponse({
+    description: "El usuario no existe",
+    type: ExceptionFormat,
+  })
+  async updateUser(
+    @Param("id") id: string,
+    @Body() dto: UpdateUserDto
+  ): Promise<UserPresenter> {
+    const user = await this.usersService.updateUser(id, {
       name: dto.name,
       email: dto.email,
       role: dto.role,
       isActive: dto.isActive,
       password: dto.password,
     });
+    return UserPresenter.fromDomain(user);
   }
 
   @Delete(":id")
-  deleteUser(@Param("id") id: string) {
-    return this.usersService.deleteUser(id);
+  @ApiOkResponse({ description: "El usuario fue eliminado correctamente" })
+  @ApiNotFoundResponse({
+    description: "El usuario no existe",
+    type: ExceptionFormat,
+  })
+  async deleteUser(@Param("id") id: string): Promise<void> {
+    await this.usersService.deleteUser(id);
   }
 }
