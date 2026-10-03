@@ -1,6 +1,8 @@
 import { Navigate, type RouteObject } from "react-router-dom";
 
-import App from "../App";
+import SignInPage from "@/app/(auth)/login/SignInPage";
+import App from "@/app/App";
+import AuthLayout from "@/core/layouts/AuthLayout/AuthLayout";
 
 export type RouteItemType = RouteObject & {
   children?: RouteItemType[];
@@ -18,10 +20,31 @@ const routes: RoutesType = [
   {
     path: "/",
     element: <App />,
+    children: [
+      {
+        path: "auth/*",
+        element: <AuthLayout />,
+        children: [
+          {
+            path: "login",
+            element: <SignInPage />,
+          },
+          {
+            path: "*",
+            element: <Navigate to="/auth/login" replace />,
+          },
+        ],
+      },
+      {
+        path: "",
+        index: true,
+        element: <Navigate to="/auth/login" replace />,
+      },
+    ],
   },
   {
     path: "*",
-    element: <Navigate to="/" replace />,
+    element: <Navigate to="/auth/login" replace />,
   },
 ];
 
